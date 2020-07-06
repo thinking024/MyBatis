@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace用于绑定一个Dao接口-->
+<mapper namespace="dao.BlogMapper">
+
+    <!--开启当前mapper文件的二级缓存
+    eviction设置缓存清除算法，LRU FIFO
+    flushInterval自动刷新间隔，单位ms
+    size最多缓存存储引用的个数
+    只读的形式返回存储引用对象-->
+    <!--<cache eviction="LRU" flushInterval="60000" size="1024" readOnly="true"/>-->
+    <!--使用第三方缓存-->
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache" />
+    <!--sql片段，实现代码重用-->
+    <sql id="if-title-author">
+        <if test="title != null">
+            and title = #{title}
+        </if>
+        <if test="author != null">
+            and author = #{author}
+        </if>
+    </sql>
+
+    <select id="getBlogs" resultType="Blog">
+        select * from blog;
+    </select>
+
+    <!--实现动态sql，如果传入了其他参数，就按照参数查询，否则就查询全部-->
+    <select id="getBlogsIf" parameterType="map" resultType="Blog">
+        select * from blog where 1=1
+        <include refid="if-title-author" />
+    </select>
+
+    <!--与if类似，但是只会执行一个参数，有点像switch-->
+    <select id="getBlogsChoose" parameterType="map" resultType="Blog">
+        select * from blog where
+        <choose>
+            <when test="title != null">
+                 title=#{title}
+            </when>
+            <when test="author != null">
+                author=#{author}
+            </when>
+            <otherwise>
+                1=1
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--where 元素只会在子元素返回内容的情况下才插入 “WHERE” 子句。而且，若子句的开头为 “AND” 或 “OR”，where 元素也会将它们去除。解决了If的问题-->
+    <select id="getBlogsWhere" parameterType="map" resultType="Blog">
+        select * from blog
+        <where>
+            <if test="title != null">
+                and title = #{title}
+            </if>
+            <if test="author != null">
+                and author = #{author}
+            </if>
+        </where>
+    </select>
+
+    <!--set 元素会动态地在行首插入 SET 关键字，并会删掉额外的逗号。同时where还可以再使用前面的动态sql-->
+    <update id="updateBlogSet" parameterType="map">
+        update blog
+        <set>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="author != null">
+                author = #{author},
+            </if>
+        </set>
+        where
+        <choose>
+            <when test="author != null">
+                author=#{author}
+            </when>
+            <otherwise>
+                id=#{id}
+            </otherwise>
+        </choose>
+    </update>
+
+    <!--where set标签的本质是使用了trim去除了一些不必要的字符串，prefix是前缀字符串，suffix是后缀字符串
+    <trim prefix="" prefixOverrides="" suffix="" suffixOverrides="" >
+
+    </trim>-->
+    <!--foreach用于遍历一个集合-->
+    <select id="getBlogsForeach" parameterType="map" resultType="Blog">
+        select * from blog
+        <where>
+            <foreach collection="ids" item="id" open="(" separator="or" close=")">
+                id = #{id}
+            </foreach>
+        </where>
+    </select>
+</mapper>

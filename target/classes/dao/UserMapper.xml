@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace用于绑定一个Dao接口-->
+<mapper namespace="dao.IUserDao">
+
+    <!--结果集映射-->
+    <!--这里的type也可以使用alias-->
+    <resultMap id="UserMap" type="User">
+        <!--colum对应数据库中的字段，property对应实体类的属性-->
+        <result column="password" property="password" />
+    </resultMap>
+
+    <!--id为方法名.returnType必须写全限定名，或者使用alias-->
+    <!--当数据库中的字段与实体类的字段名不一致时，可以使用resultMap映射-->
+    <!--sql语句中#{}是使用了?占位符的预编译，而${}不是-->
+    <select id="getUserList" resultMap="UserMap">
+        select * from test.user
+    </select>
+
+    <select id="getUserById" resultType="User" parameterType="int">
+        select * from user where id = #{id}
+    </select>
+
+    <insert id="addUser" parameterType="User">
+        insert into user (id,name,password) values (#{id},#{name},#{password})
+    </insert>
+
+
+    <!--传入的参数为map类型，以传递多个参数-->
+    <select id="getUserListLimit" resultType="User" parameterType="map">
+        select * from user limit #{startIndex},#{pageSize}
+    </select>
+</mapper>

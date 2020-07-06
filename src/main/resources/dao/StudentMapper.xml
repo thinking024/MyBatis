@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace用于绑定一个Dao接口-->
+<mapper namespace="dao.StudentMapper">
+    <!--按照结果嵌套处理-->
+    <resultMap id="StudentAndTeacher2" type="Student">
+        <!--查询结果使用别名后也要映射-->
+        <result column="sid" property="id" />
+        <result column="sname" property="name" />
+        <association property="teacher" column="teacher.*" javaType="Teacher">
+            <!--不管名字是否一样，都必须映射-->
+            <result property="id" column="id" />
+            <result property="name" column="name" />
+        </association>
+
+    </resultMap>
+
+    <select id="getStudentAndTeacher2" resultMap="StudentAndTeacher2">
+        select student.id as sid,student.`name` as sname,teacher.* from student,teacher where student.tid=teacher.id
+    </select>
+
+    <!--========================================================-->
+
+    <resultMap id="StudentAndTeacher" type="Student">
+        <!--对象用association，集合用collection-->
+
+        <!--根据查询出的tid再去teacher表中查询得到teacher对象，然后映射为student中的teacher-->
+        <association property="teacher" column="tid" javaType="Teacher" select="getTeacherById"/>
+    </resultMap>
+
+    <!--连表查询用到结果集映射-->
+    <select id="getStudentAndTeacher" resultMap="StudentAndTeacher">
+        select * from student
+    </select>
+
+    <select id="getTeacherById" resultType="Teacher" parameterType="int">
+        select * from teacher where id = #{id}
+    </select>
+</mapper>
